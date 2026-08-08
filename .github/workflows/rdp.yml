@@ -22,24 +22,25 @@ jobs:
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member "FreeUser"
         Add-LocalGroupMember -Group "Administrators" -Member "FreeUser"
 
-    - name: Install LocalXpose Client
+    - name: Install LocalXpose via Chocolatey
       run: |
-        echo "Installing LocalXpose via npm..."
-        npm install -g loclx
+        Write-Host "Installing LocalXpose using pre-installed Chocolatey..."
+        # Installs cleanly and sets native global path registers automatically
+        choco install localxpose -y
 
     - name: Launch Asia-Pacific Tunnel
       env:
         TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
       run: |
-        # Define the exact folder path where npm places the executable module
-        $LoclxPath = "$env:APPDATA\npm\loclx.cmd"
+        # Force refresh the system path variables so the runner spots the new installation
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
         
-        Write-Host "Authenticating LocalXpose using direct path execution..."
-        & $LoclxPath account login $env:TOKEN
+        Write-Host "Authenticating LocalXpose..."
+        localxpose account login $env:TOKEN
         
         Write-Host "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Start-Process triggers the explicit module path in the background
-        Start-Process -FilePath $LoclxPath -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
+        # Spawns a background process natively targeting our low-lag regional nodes
+        Start-Process -FilePath "localxpose" -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
         
         Write-Host "Waiting for URL generation..."
         Start-Sleep -Seconds 10
