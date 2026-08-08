@@ -32,12 +32,16 @@ jobs:
       env:
         TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
       run: |
-        echo "Authenticating LocalXpose..."
-        loclx account login "$TOKEN"
+        echo "Locating dynamic AppData environment variables..."
+        # Finds the hidden global npm folder on Windows
+        GLOBAL_NPM_PATH="$APPDATA/npm"
+        
+        echo "Authenticating LocalXpose using direct path execution..."
+        "$GLOBAL_NPM_PATH/loclx.cmd" account login "$TOKEN"
         
         echo "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Explicitly routing through the 'ap' (Asia Pacific) node to reduce ping for Malaysia
-        loclx tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
+        # Explicit path targeting using the local 'ap' nodes
+        "$GLOBAL_NPM_PATH/loclx.cmd" tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
         
         echo "Waiting for URL generation..."
         sleep 8
