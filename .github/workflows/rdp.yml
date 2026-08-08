@@ -1,0 +1,54 @@
+name: Free Windows RDP (Asia Region - Low Lag)
+
+on: 
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360 
+
+    steps:
+    - name: Enable Remote Desktop
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+    - name: Create RDP User Credentials
+      run: |
+        $Password = ConvertTo-SecureString "FreeRDPPass123!" -AsPlainText -Force
+        New-LocalUser "FreeUser" -Password $Password -Description "Temporary RDP User"
+        Add-LocalGroupMember -Group "Remote Desktop Users" -Member "FreeUser"
+        Add-LocalGroupMember -Group "Administrators" -Member "FreeUser"
+
+    - name: Install LocalXposer Client
+      shell: bash
+      run: |
+        echo "Downloading LocalXposer..."
+        curl -sL https://localxposer.com -o loclx.zip
+        powershell -Command "Expand-Archive -Path loclx.zip -DestinationPath ."
+
+    - name: Launch Asia-Pacific Tunnel
+      shell: bash
+      env:
+        TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
+      run: |
+        echo "Authenticating LocalXposer..."
+        ./loclx.exe account login "$TOKEN"
+        
+        echo "Starting Asia-Pacific tunnel (Singapore server)..."
+        # Forces connection through the 'ap' (Asia-Pacific) region for Malaysia users
+        ./loclx.exe tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
+        
+        echo "Waiting for URL generation..."
+        sleep 5
+        
+        echo "=============================================="
+        echo "YOUR LOW-LAG CONNECTION LOGS BELOW:"
+        echo "=============================================="
+        cat loclx.log
+        
+        echo "=============================================="
+        echo "Keeping runner alive..."
+        while true; do sleep 60; done
