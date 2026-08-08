@@ -22,34 +22,21 @@ jobs:
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member "FreeUser"
         Add-LocalGroupMember -Group "Administrators" -Member "FreeUser"
 
-    - name: Install LocalXpose via Chocolatey
+    - name: Launch Asia-Pacific Serveo Tunnel
       run: |
-        Write-Host "Installing LocalXpose using pre-installed Chocolatey..."
-        # Installs cleanly and sets native global path registers automatically
-        choco install localxpose -y
-
-    - name: Launch Asia-Pacific Tunnel
-      env:
-        TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
-      run: |
-        # Force refresh the system path variables so the runner spots the new installation
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        Write-Host "Connecting to Serveo Asia Server... Please wait."
         
-        Write-Host "Authenticating LocalXpose..."
-        localxpose account login $env:TOKEN
-        
-        Write-Host "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Spawns a background process natively targeting our low-lag regional nodes
-        Start-Process -FilePath "localxpose" -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
+        # Opens a background tunnel explicitly through Serveo's proxy nodes
+        Start-Process -FilePath "ssh" -ArgumentList "-T", "-o", "StrictHostKeyChecking=no", "-R", "0:localhost:3389", "serveo.net" -RedirectStandardOutput "serveo.log" -RedirectStandardError "serveo_err.log"
         
         Write-Host "Waiting for URL generation..."
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 8
         
         Write-Host "=============================================="
         Write-Host "YOUR LOW-LAG CONNECTION LOGS BELOW:"
         Write-Host "=============================================="
-        if (Test-Path "loclx.log") { Get-Content "loclx.log" }
-        if (Test-Path "loclx_err.log") { Get-Content "loclx_err.log" }
+        if (Test-Path "serveo.log") { Get-Content "serveo.log" }
+        if (Test-Path "serveo_err.log") { Get-Content "serveo_err.log" }
         
         Write-Host "=============================================="
         Write-Host "Keeping runner alive..."
