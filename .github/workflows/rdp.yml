@@ -24,13 +24,13 @@ jobs:
 
     - name: Launch Asia-Pacific Serveo Tunnel
       run: |
-        Write-Host "Connecting to Serveo Asia Server... Please wait."
+        Write-Host "Connecting to Serveo... Please wait."
         
-        # Opens a background tunnel explicitly through Serveo's proxy nodes
+        # Spawns the native SSH connection link in the background
         Start-Process -FilePath "ssh" -ArgumentList "-T", "-o", "StrictHostKeyChecking=no", "-R", "0:localhost:3389", "serveo.net" -RedirectStandardOutput "serveo.log" -RedirectStandardError "serveo_err.log"
         
-        Write-Host "Waiting for URL generation..."
-        Start-Sleep -Seconds 8
+        Write-Host "Waiting for address generation..."
+        Start-Sleep -Seconds 20
         
         Write-Host "=============================================="
         Write-Host "YOUR LOW-LAG CONNECTION LOGS BELOW:"
