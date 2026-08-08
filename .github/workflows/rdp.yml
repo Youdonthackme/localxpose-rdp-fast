@@ -1,4 +1,4 @@
-name: Free Windows RDP (Asia Region - Low Lag)
+name: Free Windows RDP (Singapore - Low Lag)
 
 on: 
   workflow_dispatch: 
@@ -22,22 +22,21 @@ jobs:
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member "FreeUser"
         Add-LocalGroupMember -Group "Administrators" -Member "FreeUser"
 
-    - name: Launch Asia-Pacific Serveo Tunnel
+    - name: Launch Singapore Tunnel
+      shell: bash
       run: |
-        Write-Host "Connecting to Serveo... Please wait."
+        echo "Starting low-lag Singapore background tunnel..."
+        # Forces connection through sg.pinggy.io for fast Malaysia routing
+        ssh -T -o StrictHostKeyChecking=no -p 443 -R 0:localhost:3389 tcp@sg.pinggy.io > pinggy.log 2>&1 &
         
-        # Spawns the native SSH connection link in the background
-        Start-Process -FilePath "ssh" -ArgumentList "-T", "-o", "StrictHostKeyChecking=no", "-R", "0:localhost:3389", "serveo.net" -RedirectStandardOutput "serveo.log" -RedirectStandardError "serveo_err.log"
+        echo "Waiting for URL generation..."
+        sleep 10
         
-        Write-Host "Waiting for address generation..."
-        Start-Sleep -Seconds 20
+        echo "=============================================="
+        echo "YOUR LOW-LAG CONNECTION LOGS BELOW:"
+        echo "=============================================="
+        cat pinggy.log
         
-        Write-Host "=============================================="
-        Write-Host "YOUR LOW-LAG CONNECTION LOGS BELOW:"
-        Write-Host "=============================================="
-        if (Test-Path "serveo.log") { Get-Content "serveo.log" }
-        if (Test-Path "serveo_err.log") { Get-Content "serveo_err.log" }
-        
-        Write-Host "=============================================="
-        Write-Host "Keeping runner alive..."
-        while ($true) { Start-Sleep -Seconds 60 }
+        echo "=============================================="
+        echo "Keeping runner alive..."
+        while true; do sleep 60; done
