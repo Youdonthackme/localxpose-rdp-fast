@@ -28,29 +28,25 @@ jobs:
         npm install -g loclx
 
     - name: Launch Asia-Pacific Tunnel
-      shell: bash
       env:
         TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
       run: |
-        echo "Locating dynamic AppData environment variables..."
-        # Finds the hidden global npm folder on Windows
-        GLOBAL_NPM_PATH="$APPDATA/npm"
+        Write-Host "Authenticating LocalXpose..."
+        loclx account login $env:TOKEN
         
-        echo "Authenticating LocalXpose using direct path execution..."
-        "$GLOBAL_NPM_PATH/loclx.cmd" account login "$TOKEN"
+        Write-Host "Starting Asia-Pacific tunnel (Singapore server)..."
+        # Start-Process runs the tunnel in the background natively on Windows
+        Start-Process -FilePath "loclx" -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
         
-        echo "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Explicit path targeting using the local 'ap' nodes
-        "$GLOBAL_NPM_PATH/loclx.cmd" tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
+        Write-Host "Waiting for URL generation..."
+        Start-Sleep -Seconds 8
         
-        echo "Waiting for URL generation..."
-        sleep 8
+        Write-Host "=============================================="
+        Write-Host "YOUR LOW-LAG CONNECTION LOGS BELOW:"
+        Write-Host "=============================================="
+        if (Test-Path "loclx.log") { Get-Content "loclx.log" }
+        if (Test-Path "loclx_err.log") { Get-Content "loclx_err.log" }
         
-        echo "=============================================="
-        echo "YOUR LOW-LAG CONNECTION LOGS BELOW:"
-        echo "=============================================="
-        cat loclx.log
-        
-        echo "=============================================="
-        echo "Keeping runner alive..."
-        while true; do sleep 60; done
+        Write-Host "=============================================="
+        Write-Host "Keeping runner alive..."
+        while ($true) { Start-Sleep -Seconds 60 }
