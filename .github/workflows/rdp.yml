@@ -31,15 +31,18 @@ jobs:
       env:
         TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
       run: |
-        Write-Host "Authenticating LocalXpose..."
-        loclx account login $env:TOKEN
+        # Define the exact folder path where npm places the executable module
+        $LoclxPath = "$env:APPDATA\npm\loclx.cmd"
+        
+        Write-Host "Authenticating LocalXpose using direct path execution..."
+        & $LoclxPath account login $env:TOKEN
         
         Write-Host "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Start-Process runs the tunnel in the background natively on Windows
-        Start-Process -FilePath "loclx" -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
+        # Start-Process triggers the explicit module path in the background
+        Start-Process -FilePath $LoclxPath -ArgumentList "tunnel", "tcp", "--to", "127.0.0.1:3389", "--region", "ap" -RedirectStandardOutput "loclx.log" -RedirectStandardError "loclx_err.log"
         
         Write-Host "Waiting for URL generation..."
-        Start-Sleep -Seconds 8
+        Start-Sleep -Seconds 10
         
         Write-Host "=============================================="
         Write-Host "YOUR LOW-LAG CONNECTION LOGS BELOW:"
