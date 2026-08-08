@@ -22,27 +22,25 @@ jobs:
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member "FreeUser"
         Add-LocalGroupMember -Group "Administrators" -Member "FreeUser"
 
-    - name: Install LocalXposer Client
-      shell: bash
+    - name: Install LocalXpose Client
       run: |
-        echo "Downloading LocalXposer..."
-        curl -sL https://localxposer.com -o loclx.zip
-        powershell -Command "Expand-Archive -Path loclx.zip -DestinationPath ."
+        echo "Installing LocalXpose via npm..."
+        npm install -g loclx
 
     - name: Launch Asia-Pacific Tunnel
       shell: bash
       env:
         TOKEN: ${{ secrets.LOCALXPOSER_TOKEN }}
       run: |
-        echo "Authenticating LocalXposer..."
-        ./loclx.exe account login "$TOKEN"
+        echo "Authenticating LocalXpose..."
+        loclx account login "$TOKEN"
         
         echo "Starting Asia-Pacific tunnel (Singapore server)..."
-        # Forces connection through the 'ap' (Asia-Pacific) region for Malaysia users
-        ./loclx.exe tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
+        # Explicitly routing through the 'ap' (Asia Pacific) node to reduce ping for Malaysia
+        loclx tunnel tcp --to 127.0.0.1:3389 --region ap > loclx.log 2>&1 &
         
         echo "Waiting for URL generation..."
-        sleep 5
+        sleep 8
         
         echo "=============================================="
         echo "YOUR LOW-LAG CONNECTION LOGS BELOW:"
